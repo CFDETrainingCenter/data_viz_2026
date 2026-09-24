@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The Ion-Transport Landscape of Human Tissues</title>
+<script src="all_tissues.js"></script>
+<script src="cells_liver.js"></script>
+<script src="cells_pancreas.js"></script>
+<script src="cells_intestine.js"></script>
+<script src="geomx_view.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#EEF0F8;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;color:#4A4560;overflow:hidden}
+#app{position:relative;width:100vw;height:100vh}
+canvas{display:block;width:100%;height:100%}
+.head{position:absolute;top:26px;left:34px;pointer-events:none;z-index:5}
+.head h1{font:600 21px 'Inter',sans-serif;color:#5A4E70;letter-spacing:.01em}
+.head .s{font:400 13px 'Inter',sans-serif;color:#8479A8;margin-top:4px;max-width:420px;line-height:1.55}
+.panel{position:absolute;top:26px;right:34px;width:212px;z-index:5}
+.card{background:rgba(255,255,255,0.62);backdrop-filter:blur(10px);border:0.5px solid rgba(150,130,180,0.25);border-radius:12px;padding:13px 14px;margin-bottom:12px;box-shadow:0 4px 20px rgba(120,110,150,0.08)}
+.card h3{font:600 10px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#A99BC4;margin-bottom:9px}
+.seg{display:flex;gap:4px;background:rgba(180,170,200,0.16);border-radius:8px;padding:3px}
+.seg button{flex:1;font:500 12px 'Inter',sans-serif;padding:6px 4px;border:none;border-radius:6px;background:transparent;color:#8479A8;cursor:pointer}
+.seg button.on{background:#fff;color:#6B5B9A;box-shadow:0 1px 4px rgba(120,110,150,0.15)}
+.tis{display:block;width:100%;text-align:left;font:500 13px 'Inter',sans-serif;padding:8px 11px;margin-bottom:5px;border-radius:8px;border:0.5px solid rgba(150,130,180,0.25);background:rgba(255,255,255,0.4);color:#6B6080;cursor:pointer}
+.tis.on{background:rgba(200,139,160,0.16);color:#B5527A;border-color:rgba(181,82,122,0.5)}
+.tis .n{float:right;font-weight:400;color:#A99BC4;font-size:11px}
+.tog{display:flex;align-items:center;gap:8px;font:400 12px 'Inter',sans-serif;color:#6B6080;cursor:pointer;padding:5px 0}
+.tog input{accent-color:#C98BA0}
+.lg{font:400 11px 'Inter',sans-serif}
+.lg .row{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.lg .sw{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.lg .ct{margin-left:auto;color:#A99BC4}
+.cbar{height:12px;border-radius:3px;margin:4px 0;background:linear-gradient(to right,#3B6BB0,#9DBEDC,#EDEDF2,#E8B0C0,#C9527A)}
+.cbar-l{display:flex;justify-content:space-between;font-size:9px;color:#A99BC4}
+.foot{position:absolute;bottom:20px;left:34px;font:400 11px 'Inter',sans-serif;color:#9C8FB8;max-width:540px;line-height:1.5;z-index:5}
+.badge{display:inline-block;background:rgba(150,130,200,0.12);border:0.5px solid rgba(150,130,200,0.3);color:#8B7BB0;font-size:10px;padding:2px 8px;border-radius:5px;margin-top:5px}
+.hint{position:absolute;bottom:20px;right:34px;font:400 11px 'Inter',sans-serif;color:#A99BC4;z-index:5}
+.overlay{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(235,235,245,0.72);backdrop-filter:blur(8px)}
+.intro{max-width:560px;background:rgba(255,255,255,0.9);border:0.5px solid rgba(150,130,180,0.3);border-radius:18px;padding:38px 40px;box-shadow:0 20px 60px rgba(120,110,150,0.18)}
+.intro .eyebrow{font:600 11px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.14em;color:#B5527A;margin-bottom:12px}
+.intro h2{font:600 26px 'Inter',sans-serif;color:#5A4E70;line-height:1.25;margin-bottom:14px}
+.intro p{font:400 14px 'Inter',sans-serif;color:#6B6080;line-height:1.65;margin-bottom:14px}
+.intro .row{display:flex;gap:10px;margin-top:22px}
+.intro button{font:600 13px 'Inter',sans-serif;padding:11px 22px;border-radius:9px;border:none;cursor:pointer}
+.intro .primary{background:#B5527A;color:#fff}
+.intro .ghost{background:transparent;color:#8479A8;border:0.5px solid rgba(150,130,180,0.4)}
+.tourbar{position:absolute;bottom:0;left:0;right:0;z-index:15;display:none;justify-content:center;padding:0 0 26px}
+.tourcard{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border:0.5px solid rgba(150,130,180,0.3);border-radius:14px;padding:16px 22px;max-width:680px;box-shadow:0 10px 40px rgba(120,110,150,0.18);display:flex;align-items:center;gap:18px}
+.tourcard .txt{flex:1}
+.tourcard .step{font:600 10px 'Inter',sans-serif;text-transform:uppercase;letter-spacing:.12em;color:#B5527A;margin-bottom:4px}
+.tourcard .ttl{font:600 15px 'Inter',sans-serif;color:#5A4E70;margin-bottom:3px}
+.tourcard .dsc{font:400 12.5px 'Inter',sans-serif;color:#6B6080;line-height:1.5}
+.tourcard .nav{display:flex;gap:8px;align-items:center}
+.tourcard button{font:600 12px 'Inter',sans-serif;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap}
+.tourcard .next{background:#B5527A;color:#fff}
+.tourcard .prev{background:transparent;color:#8479A8;border:0.5px solid rgba(150,130,180,0.4)}
+.tourcard .exit{background:transparent;color:#A99BC4;font-size:11px;padding:8px 10px}
+.dots{display:flex;gap:5px;margin-top:8px}
+.dots span{width:6px;height:6px;border-radius:50%;background:rgba(150,130,180,0.3)}
+.dots span.on{background:#B5527A}
+.tourbtn{position:absolute;top:26px;left:34px;margin-top:62px;z-index:5}
+.tourbtn button{font:600 12px 'Inter',sans-serif;padding:9px 18px;border-radius:9px;border:0.5px solid rgba(181,82,122,0.4);background:rgba(200,139,160,0.14);color:#B5527A;cursor:pointer}
+</style></head><body>
+<div id="app">
+  <canvas id="cv"></canvas>
+  <div id="geomx-view" style="display:none;position:absolute;inset:0;z-index:3;overflow:auto;padding:90px 60px 40px 60px;background:linear-gradient(180deg,#EFF1F9,#EAEAF4)">
+    <div style="max-width:1000px;margin:0 auto">
+      <div style="font:600 22px 'Inter';color:#5A4E70;margin-bottom:6px">GeoMx whole-transcriptome arm — the complete ion panel</div>
+      <div style="font:400 13.5px 'Inter';color:#6B6080;line-height:1.6;margin-bottom:22px;max-width:760px">
+        The same screening logic applied to GeoMx's 7,619-gene whole transcriptome discovers <b id="gx-ngenes"></b> ion-transporter genes — versus just 12 on the Xenium liver panel. This is the complete transporter complement: Na/K-ATPase, the V-ATPase proton pumps, the SLC4 bicarbonate family. The tradeoff: GeoMx resolves <b>47 regions</b>, not single cells.
+      </div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div style="flex:1;min-width:380px;background:rgba(255,255,255,0.6);border:0.5px solid rgba(150,130,180,0.25);border-radius:14px;padding:20px">
+          <div style="font:600 13px 'Inter';color:#5A4E70;margin-bottom:12px">Zonal IEA: periportal → pericentral</div>
+          <svg id="gx-zonal" width="100%" height="240" viewBox="0 0 420 240"></svg>
+          <div id="gx-stats" style="font:400 12px 'Inter';color:#6B6080;margin-top:10px;line-height:1.6"></div>
+        </div>
+        <div style="flex:1;min-width:380px;background:rgba(255,255,255,0.6);border:0.5px solid rgba(150,130,180,0.25);border-radius:14px;padding:20px">
+          <div style="font:600 13px 'Inter';color:#5A4E70;margin-bottom:12px">Top zonal genes (whole-transcriptome only)</div>
+          <svg id="gx-genes" width="100%" height="300" viewBox="0 0 420 300"></svg>
+        </div>
+      </div>
+      <div style="font:400 11px 'Inter';color:#9C8FB8;margin-top:18px">One donor liver, 4 regions × 3 zones, ~4 replicate ROIs each. Aggregate of <b id="gx-ng2"></b> screened ion genes. Modest magnitude, statistically robust, regionally unanimous.</div>
+    </div>
+  </div>
+  <div class="overlay" id="intro-overlay">
+    <div class="intro">
+      <div class="eyebrow">Spatial Transcriptomics · SenNet / HuBMAP</div>
+      <h2>One molecular ruler, three architectures of transport</h2>
+      <p>Every cell in your body moves ions across its membranes — it is how the liver detoxifies, the pancreas secretes, the gut absorbs. The machinery is shared, but each organ arranges it differently.</p>
+      <p>We screened the same panel of ion-transporter genes across three human organs using one identical pipeline, then mapped the aggregate expression (IEA) onto every cell in space. The result is a portrait of how transport is organized — drawn from <b>375,000+ real cells</b>.</p>
+      <div class="row">
+        <button class="primary" id="start-tour">Take the guided tour →</button>
+        <button class="ghost" id="skip-intro">Explore freely</button>
+      </div>
+    </div>
+  </div>
+  <div class="tourbtn" id="tourbtn" style="display:none"><button id="reopen-tour">▶ Guided tour</button></div>
+  <div class="tourbar" id="tourbar">
+    <div class="tourcard">
+      <div class="txt">
+        <div class="step" id="t-step"></div>
+        <div class="ttl" id="t-ttl"></div>
+        <div class="dsc" id="t-dsc"></div>
+        <div class="dots" id="t-dots"></div>
+      </div>
+      <div class="nav">
+        <button class="prev" id="t-prev">←</button>
+        <button class="next" id="t-next">Next →</button>
+      </div>
+      <button class="exit" id="t-exit">✕</button>
+    </div>
+  </div>
+  <div class="head">
+    <h1 id="title">The Ion-Transport Landscape</h1>
+    <div class="s" id="subtitle">Every cell in a human liver section, mapped by its ion-transporter expression. 151,380 cells, each a single point.</div>
+  </div>
+  <div class="panel">
+    <div class="card"><h3>Tissue</h3>
+      <button class="tis on" data-tis="liver">Liver <span class="n" id="n-liver"></span></button>
+      <button class="tis" data-tis="pancreas">Pancreas <span class="n" id="n-pancreas"></span></button>
+      <button class="tis" data-tis="intestine">Intestine <span class="n" id="n-intestine"></span></button>
+      <button class="tis" data-tis="geomx" style="margin-top:8px;border-color:rgba(99,102,241,0.5);color:#6366F1">GeoMx · whole-transcriptome</button>
+    </div>
+    <div class="card"><h3>Color by</h3>
+      <div class="seg"><button class="on" data-mode="ct">Cell type</button><button data-mode="iea">IEA score</button></div>
+    </div>
+    <div class="card"><h3>Transport flow</h3>
+      <label class="tog"><input type="checkbox" id="flow-toggle"> Streamlines</label>
+      <label class="tog"><input type="checkbox" id="anim-toggle"> Animate flow</label>
+    </div>
+    <div class="card"><h3 id="leg-h">Legend</h3><div class="lg" id="legend"></div></div>
+  </div>
+  <div class="foot" id="foot">
+    Each point is one segmented cell at its true spatial position, colored by transporter-marker cell type.
+    <br><span class="badge">IEA = transcriptomic proxy · flow = expression gradient, not measured ion flux</span>
+  </div>
+  <div class="hint">drag to pan · scroll to zoom</div>
+</div>
+<script>
+var BUNDLE={liver:CELLS_LIVER,pancreas:CELLS_PANCREAS,intestine:CELLS_INTESTINE};
+var FLOWS={liver:ATLAS.tissues.liver.flow,pancreas:ATLAS.tissues.pancreas.flow,intestine:ATLAS.tissues.intestine.flow};
+var TISSUE="liver",MODE="ct",SHOWFLOW=false,ANIM=false;
+
+var cv=document.getElementById('cv'),x=cv.getContext('2d');
+var W,H,DPR;
+function resize(){DPR=window.devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;
+  cv.width=W*DPR;cv.height=H*DPR;x.setTransform(DPR,0,0,DPR,0,0);render();}
+window.addEventListener('resize',resize);
+
+// camera (pan/zoom) in screen space over the fitted tissue
+var cam={s:1,tx:0,ty:0};
+function fitCam(){
+  var d=BUNDLE[TISSUE],b=d.bounds;
+  var bw=b.x1-b.x0,bh=b.y1-b.y0;
+  var pad=60;
+  var s=Math.min((W-pad*2)/bw,(H-pad*2)/bh);
+  cam.s=s;
+  cam.tx=(W-bw*s)/2 - b.x0*s;
+  cam.ty=(H-bh*s)/2 - b.y0*s;
+}
+function MX(mx){return mx*cam.s+cam.tx;}
+function MY(my){return H-(my*cam.s+cam.ty);} // flip y, upright
+
+// palettes
+var CT_COL={
+ 'Hepatocyte-Pericentral':[226,114,140],'Hepatocyte-Periportal':[120,170,210],
+ 'Hepatocyte-Mid':[235,200,148],'Cholangiocyte':[100,190,170],'RBC':[230,120,150],
+ 'Ductal':[150,120,210],'Acinar':[235,180,120],'Acinar-Endothelial':[120,200,200],'Other-epithelial':[200,170,210],
+ 'Colonocyte-Surface':[240,150,110],'Crypt-Secretory':[120,150,220],'Absorptive-ENaC':[150,200,130],'Colonocyte':[230,160,190],
+ 'Other':[205,200,220]
+};
+function ctColor(name){return CT_COL[name]||[205,200,220];}
+// RdBu for IEA
+function rdbu(v,lo,hi){var lim=Math.max(Math.abs(lo),Math.abs(hi));var t=Math.max(0,Math.min(1,(v+lim)/(2*lim)));
+  var st=[[59,107,176],[157,190,220],[237,237,242],[232,176,192],[201,82,122]];
+  var s=t*4,i=Math.floor(s),f=s-i;if(i>=4){i=3;f=1;}var a=st[i],b=st[i+1];
+  return [a[0]+(b[0]-a[0])*f|0,a[1]+(b[1]-a[1])*f|0,a[2]+(b[2]-a[2])*f|0];}
+
+function haze(){
+  var g=x.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#EFF1F9');g.addColorStop(0.55,'#EAEAF4');g.addColorStop(1,'#EEEAF2');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+}
+
+// ---- cell render: every cell, additive glow ----
+function renderCells(){
+  var d=BUNDLE[TISSUE];var n=d.n;
+  var names=d.ct_names;
+  x.globalCompositeOperation='source-over';
+  var r=Math.max(0.5,Math.min(2.2,cam.s*7));
+  var otherIdx=names.indexOf('Other');
+  // PASS 1: faint "Other" cells first (background context), small + pale
+  if(MODE==="ct"){
+    for(var i=0;i<n;i++){
+      if(d.ct[i]!==otherIdx)continue;
+      var sx=MX(d.x[i]),sy=MY(d.y[i]);
+      if(sx<-5||sx>W+5||sy<-5||sy>H+5)continue;
+      x.fillStyle='rgba(190,186,205,0.18)';  // very faint grey-lilac
+      x.beginPath();x.arc(sx,sy,r*0.8,0,6.2832);x.fill();
+    }
+    // PASS 2: typed cells on top, brighter + slightly larger so they POP
+    for(var i=0;i<n;i++){
+      if(d.ct[i]===otherIdx)continue;
+      var sx=MX(d.x[i]),sy=MY(d.y[i]);
+      if(sx<-5||sx>W+5||sy<-5||sy>H+5)continue;
+      var col=ctColor(names[d.ct[i]]);
+      x.fillStyle='rgba('+col[0]+','+col[1]+','+col[2]+',0.92)';
+      x.beginPath();x.arc(sx,sy,r*1.15,0,6.2832);x.fill();
+    }
+  } else {
+    // IEA mode: all cells by score, no grey — the dramatic reveal
+    for(var i=0;i<n;i++){
+      var sx=MX(d.x[i]),sy=MY(d.y[i]);
+      if(sx<-5||sx>W+5||sy<-5||sy>H+5)continue;
+      var col=rdbu(d.iea[i],d.iea_min,d.iea_max);
+      x.fillStyle='rgba('+col[0]+','+col[1]+','+col[2]+',0.85)';
+      x.beginPath();x.arc(sx,sy,r,0,6.2832);x.fill();
+    }
+  }
+}
+
+// ---- clean streamlines (capped length, no sinks) ----
+var F;
+function setFlow(){F=FLOWS[TISSUE];}
+function fieldMic(mx,my){var c=(mx-F.x0)/F.grid,r=(my-F.y0)/F.grid;var ic=c|0,ir=r|0;
+  if(ic<0||ir<0||ic>=F.nx-1||ir>=F.ny-1)return null;
+  var a=F.field[ir][ic],b=F.field[ir][ic+1],cc=F.field[ir+1][ic],dd=F.field[ir+1][ic+1];
+  if(a===null||b===null||cc===null||dd===null)return null;var fc=c-ic,fr=r-ir;
+  return a*(1-fc)*(1-fr)+b*fc*(1-fr)+cc*(1-fc)*fr+dd*fc*fr;}
+function gradMic(mx,my){var e=F.grid*0.5;var a=fieldMic(mx+e,my),b=fieldMic(mx-e,my),c=fieldMic(mx,my+e),dd=fieldMic(mx,my-e);
+  if(a===null||b===null||c===null||dd===null)return[0,0];return[a-b,c-dd];}
+function gradCoherence(mx,my,step){
+  // stability of gradient direction locally. Robust to null/edge neighbors.
+  var g0=gradMic(mx,my);var m0=Math.hypot(g0[0],g0[1]);if(m0<1e-9)return 0;
+  var ax=g0[0]/m0,ay=g0[1]/m0,dot=0,cnt=0;
+  var offs=[[step,0],[-step,0],[0,step],[0,-step]];
+  for(var k=0;k<offs.length;k++){var g=gradMic(mx+offs[k][0],my+offs[k][1]);
+    var m=Math.hypot(g[0],g[1]);if(m<1e-9)continue;   // skip nulls, don't penalize
+    dot+=(g[0]/m)*ax+(g[1]/m)*ay;cnt++;}
+  // if too few valid neighbors (deep edge), treat as neutral-pass, not reject
+  if(cnt<2)return 0.6;
+  return Math.max(0,dot/cnt);
+}
+function drawStreamlines(alpha){
+  setFlow();
+  var b=BUNDLE[TISSUE].bounds;
+  var stepx=(b.x1-b.x0)/40, stepy=(b.y1-b.y0)/40;
+  // intestine has crypt-sink artifacts -> strict gate. liver/pancreas smooth -> relaxed.
+  var COH=(TISSUE==='intestine')?0.55:0.15;
+  var minPts=(TISSUE==='intestine')?5:3;
+  x.globalCompositeOperation='source-over';
+  for(var mx0=b.x0+stepx*0.5;mx0<b.x1;mx0+=stepx)
+  for(var my0=b.y0+stepy*0.5;my0<b.y1;my0+=stepy){
+    if(gradCoherence(mx0,my0,stepx)<COH)continue;
+    var mx=mx0,my=my0;var pts=[[mx,my]];
+    for(var s=0;s<20;s++){
+      var g=gradMic(mx,my);var m=Math.hypot(g[0],g[1]);if(m<1e-7)break;
+      if(gradCoherence(mx,my,stepx)<COH*0.7)break;
+      mx+=g[0]/m*stepx*0.6;my+=g[1]/m*stepy*0.6;pts.push([mx,my]);}
+    if(pts.length<minPts)continue;
+    for(var j=1;j<pts.length;j++){var t=j/pts.length;
+      x.strokeStyle='rgba(40,90,110,'+(alpha*(0.15+t*0.45))+')';x.lineWidth=0.6+t*1.1;
+      x.beginPath();x.moveTo(MX(pts[j-1][0]),MY(pts[j-1][1]));x.lineTo(MX(pts[j][0]),MY(pts[j][1]));x.stroke();}
+  }
+}
+// animated particles along field (clean)
+var parts=[];
+function seedParts(){var b=BUNDLE[TISSUE].bounds;parts=[];
+  for(var i=0;i<450;i++)parts.push({x:b.x0+Math.random()*(b.x1-b.x0),y:b.y0+Math.random()*(b.y1-b.y0),life:Math.random()*60});}
+function drawParticles(){setFlow();var b=BUNDLE[TISSUE].bounds;
+  for(var k=0;k<parts.length;k++){var p=parts[k];var g=gradMic(p.x,p.y);var m=Math.hypot(g[0],g[1]);
+    if(m>1e-5){p.x+=g[0]/m*(b.x1-b.x0)*0.0016;p.y+=g[1]/m*(b.y1-b.y0)*0.0016;}
+    p.life--;if(p.life<0||p.x<b.x0||p.x>b.x1||p.y<b.y0||p.y>b.y1){p.x=b.x0+Math.random()*(b.x1-b.x0);p.y=b.y0+Math.random()*(b.y1-b.y0);p.life=30+Math.random()*40;}
+    var mg=fieldMic(p.x,p.y);var t=mg===null?0:Math.min(1,(mg-F.field_min)/(F.field_max-F.field_min));
+    x.fillStyle='rgba(30,120,140,'+(0.3+t*0.5)+')';x.beginPath();x.arc(MX(p.x),MY(p.y),1.2+t*1.3,0,6.28);x.fill();}}
+
+function render(){
+  haze();
+  renderCells();
+  if(SHOWFLOW&&!ANIM)drawStreamlines(1);
+  if(ANIM)drawParticles();
+}
+var animReq=null;
+function loop(){if(ANIM){render();animReq=requestAnimationFrame(loop);}}
+
+function updateLegend(){
+  var d=BUNDLE[TISSUE];var L=document.getElementById('legend');var h='';
+  document.getElementById('leg-h').textContent=(MODE==='ct')?'Cell type':'IEA score';
+  if(MODE==='ct'){d.ct_names.forEach(function(nm){
+    if(nm==='RBC')return; // segmentation artifact (n=54), not a reliable population
+    var c=ctColor(nm);var ct=d.ct_counts[nm]||0;
+    h+='<div class="row"><span class="sw" style="background:rgb('+c[0]+','+c[1]+','+c[2]+')"></span>'+nm+'<span class="ct">'+ct.toLocaleString()+'</span></div>';});}
+  else{h+='<div class="cbar"></div><div class="cbar-l"><span>'+d.iea_min.toFixed(1)+'</span><span>0</span><span>'+d.iea_max.toFixed(1)+'</span></div>'
+       +'<div style="font-size:10px;color:#A99BC4;margin-top:3px">below · at · above background</div>';}
+  L.innerHTML=h;
+}
+function updateText(){
+  var d=BUNDLE[TISSUE];
+  var titles={liver:'The Ion-Transport Landscape of Liver',pancreas:'The Ion-Transport Landscape of Pancreas',intestine:'The Ion-Transport Landscape of Intestine'};
+  var subs={
+    liver:d.n.toLocaleString()+' cells. Transporter-marked hepatocytes cluster into zones across the lobular tissue.',
+    pancreas:d.n.toLocaleString()+' cells. CFTR-high ductal cells trace the secretory tree against surrounding acinar tissue.',
+    intestine:d.n.toLocaleString()+' cells. A crypt-to-surface axis: DRA-high surface colonocytes above, secretory crypt base below.'};
+  var foots={
+    liver:'Each point is one segmented cell at its true position, colored by transporter-marker cell type.',
+    pancreas:'Each point is one segmented cell at its true position. Spatial statistics used a 200,000-cell subsample; all cells are shown here.',
+    intestine:'Each point is one segmented cell at its true spatial position.'};
+  document.getElementById('title').textContent=titles[TISSUE];
+  document.getElementById('subtitle').textContent=subs[TISSUE];
+  document.getElementById('foot').innerHTML=foots[TISSUE]+'<br><span class="badge">IEA = transcriptomic proxy · flow = expression gradient, not measured ion flux</span>';
+}
+
+// counts in tissue buttons
+['liver','pancreas','intestine'].forEach(function(t){document.getElementById('n-'+t).textContent=BUNDLE[t].n.toLocaleString();});
+
+// interactions
+document.querySelectorAll('[data-tis]').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('[data-tis]').forEach(function(o){o.classList.remove('on')});b.classList.add('on');
+  if(b.dataset.tis==='geomx'){
+    document.getElementById('geomx-view').style.display='block';renderGeoMx();return;}
+  document.getElementById('geomx-view').style.display='none';
+  TISSUE=b.dataset.tis;fitCam();setFlow();seedParts();updateText();updateLegend();render();};});
+document.querySelectorAll('[data-mode]').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('[data-mode]').forEach(function(o){o.classList.remove('on')});b.classList.add('on');
+  MODE=b.dataset.mode;updateLegend();render();};});
+document.getElementById('flow-toggle').onchange=function(){SHOWFLOW=this.checked;if(this.checked){document.getElementById('anim-toggle').checked=false;ANIM=false;}render();};
+document.getElementById('anim-toggle').onchange=function(){ANIM=this.checked;if(this.checked){document.getElementById('flow-toggle').checked=false;SHOWFLOW=false;seedParts();loop();}else{if(animReq)cancelAnimationFrame(animReq);render();}};
+
+// pan/zoom
+var drag=false,lx,ly;
+cv.addEventListener('mousedown',function(e){drag=true;lx=e.clientX;ly=e.clientY;});
+window.addEventListener('mouseup',function(){drag=false;});
+window.addEventListener('mousemove',function(e){if(!drag)return;cam.tx+=(e.clientX-lx);cam.ty-=(e.clientY-ly);lx=e.clientX;ly=e.clientY;if(!ANIM)render();});
+cv.addEventListener('wheel',function(e){e.preventDefault();var f=e.deltaY<0?1.1:0.9;
+  var mxs=(e.clientX-cam.tx)/cam.s, mys=(H-e.clientY-cam.ty)/cam.s;
+  cam.s*=f;cam.tx=e.clientX-mxs*cam.s;cam.ty=(H-e.clientY)-mys*cam.s;if(!ANIM)render();},{passive:false});
+
+
+// ============ GeoMx VIEW ============
+function renderGeoMx(){
+  if(typeof GEOMX==='undefined')return;
+  document.getElementById('gx-ngenes').textContent=GEOMX.n_genes;
+  document.getElementById('gx-ng2').textContent=GEOMX.n_genes;
+  // zonal bar+points
+  var zs=GEOMX.zone_summary;
+  var svg=document.getElementById('gx-zonal');
+  var vals=zs.map(function(z){return z.iea_mean;});
+  var allv=[];zs.forEach(function(z){z.iea_values.forEach(function(v){allv.push(v);});});
+  var lo=Math.min.apply(null,allv),hi=Math.max.apply(null,allv);
+  function Y(v){return 210-((v-lo)/(hi-lo))*180;}
+  var cols=['#9DBEDC','#D1B0D8','#C9527A'];
+  var h='';var bw=90,gap=40,x0=60;
+  zs.forEach(function(z,i){var cx=x0+i*(bw+gap);
+    // points
+    z.iea_values.forEach(function(v){h+='<circle cx="'+(cx+bw/2+(Math.random()*30-15))+'" cy="'+Y(v)+'" r="2.5" fill="'+cols[i]+'" opacity="0.55"/>';});
+    // mean bar
+    h+='<line x1="'+cx+'" y1="'+Y(z.iea_mean)+'" x2="'+(cx+bw)+'" y2="'+Y(z.iea_mean)+'" stroke="'+cols[i]+'" stroke-width="3"/>';
+    h+='<text x="'+(cx+bw/2)+'" y="230" text-anchor="middle" font-size="11" fill="#6B6080" font-family="Inter">'+z.zone_name+'</text>';
+  });
+  // trend line
+  h+='<line x1="'+(x0+bw/2)+'" y1="'+Y(zs[0].iea_mean)+'" x2="'+(x0+2*(bw+gap)+bw/2)+'" y2="'+Y(zs[2].iea_mean)+'" stroke="#B5527A" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>';
+  svg.innerHTML=h;
+  var st=GEOMX.statistics;
+  document.getElementById('gx-stats').innerHTML=
+    'Linear trend <b>p='+st.trend_p+'</b> · ANOVA p='+st.anova_p+' · Z1 vs Z3 p='+st.z1_vs_z3_p+
+    '<br><span style="color:#69902F">✓ all 4 regions trend the same direction</span>';
+  // top genes lollipop
+  var gsvg=document.getElementById('gx-genes');var rows=GEOMX.gene_zone_sorted.slice(0,12);
+  var gh='';var rh=22,gy=10;
+  var gmin=99,gmax=-99;rows.forEach(function(r){gmin=Math.min(gmin,r.z1,r.z3);gmax=Math.max(gmax,r.z1,r.z3);});
+  function GX(v){return 120+((v-gmin)/(gmax-gmin))*270;}
+  rows.forEach(function(r,i){var yy=gy+i*rh+11;
+    gh+='<text x="0" y="'+(yy+3)+'" font-size="10.5" fill="#5A4E70" font-family="Inter">'+r.g+'</text>';
+    gh+='<line x1="'+GX(r.z1)+'" y1="'+yy+'" x2="'+GX(r.z3)+'" y2="'+yy+'" stroke="#C9B8D8" stroke-width="2"/>';
+    gh+='<circle cx="'+GX(r.z1)+'" cy="'+yy+'" r="3.5" fill="#9DBEDC"/>';
+    gh+='<circle cx="'+GX(r.z3)+'" cy="'+yy+'" r="3.5" fill="#C9527A"/>';
+  });
+  gh+='<text x="120" y="295" font-size="9" fill="#9DBEDC" font-family="Inter">● periportal</text>';
+  gh+='<text x="230" y="295" font-size="9" fill="#C9527A" font-family="Inter">● pericentral</text>';
+  gsvg.innerHTML=gh;
+}
+
+// ============ GUIDED TOUR: the 5-Act story ============
+function setView(tissue,mode,flow,anim,zoom){
+  TISSUE=tissue;MODE=mode;SHOWFLOW=flow;ANIM=anim;
+  document.getElementById('geomx-view').style.display='none';  // FIX: never leave GeoMx open during tour
+  document.querySelectorAll('[data-tis]').forEach(function(o){o.classList.toggle('on',o.dataset.tis===tissue);});
+  document.querySelectorAll('[data-mode]').forEach(function(o){o.classList.toggle('on',o.dataset.mode===mode);});
+  document.getElementById('flow-toggle').checked=flow;
+  document.getElementById('anim-toggle').checked=anim;
+  fitCam();setFlow();seedParts();updateText();updateLegend();
+  if(zoom&&zoom>1){
+    var d=BUNDLE[TISSUE];
+    // find centroid of top-IEA cells to zoom into the real hotspot
+    var n=d.n,sx=0,sy=0,cnt=0,thr=d.iea_max*0.6;
+    for(var i=0;i<n;i++){if(d.iea[i]>=thr){sx+=d.x[i];sy+=d.y[i];cnt++;}}
+    var hx=cnt>0?sx/cnt:(d.bounds.x0+d.bounds.x1)/2;
+    var hy=cnt>0?sy/cnt:(d.bounds.y0+d.bounds.y1)/2;
+    cam.s*=zoom;
+    cam.tx=W/2 - hx*cam.s;
+    cam.ty=H/2 - hy*cam.s;}
+  if(anim){loop();}else{if(animReq)cancelAnimationFrame(animReq);render();}
+}
+var TOUR=[
+ {tis:'liver',mode:'ct',flow:false,anim:false,zoom:1,
+  step:'Act I · The Question',ttl:'Every cell moves ions',
+  dsc:'Each point is one real cell in a human liver section, colored by its transporter-marker identity. Ion transport underlies detoxification, bile formation, and zonation. The faint grey is unclassified parenchyma; colored cells carry strong transporter signatures.'},
+ {tis:'liver',mode:'iea',flow:false,anim:false,zoom:1,
+  step:'Act II · The Landscape',ttl:'Transport expression is spatially organized',
+  dsc:'The same cells, now colored by IEA — aggregate ion-transporter expression (a transcriptomic proxy, not flux). Red marks above-background enrichment. The pattern is not random: high-transport cells cluster, forming a landscape.'},
+ {tis:'liver',mode:'iea',flow:true,anim:false,zoom:2.6,
+  step:'Act II · The Gradient',ttl:'Streamlines trace where expression rises',
+  dsc:'Streamlines follow the gradient of the smoothed expression field — the direction transport-gene expression increases. This is an expression gradient, NOT measured ion movement. FDR-corrected hotspots sit at the 77th percentile of this field.'},
+ {tis:'pancreas',mode:'ct',flow:false,anim:false,zoom:1,
+  step:'Act III · A Different Architecture',ttl:'Pancreas: the ductal tree',
+  dsc:'Same pipeline, new organ. CFTR-high ductal cells (purple) trace the secretory tree against acinar tissue. The transport machinery is arranged as a branching network — the architecture of bicarbonate secretion.'},
+ {tis:'intestine',mode:'ct',flow:false,anim:false,zoom:1,
+  step:'Act III · A Third Architecture',ttl:'Intestine: the crypt–surface axis',
+  dsc:'The same screen again. DRA/SLC26A3-high surface colonocytes (orange) sit opposite the secretory crypt base. One molecular ruler, three organs, three distinct geometries — each matching known physiology.'},
+ {tis:'liver',mode:'iea',flow:false,anim:true,zoom:2.2,
+  step:'Act IV · The Living Field',ttl:'Transport, animated',
+  dsc:'Particles drift along the expression gradient, making the transport landscape legible as motion. Again: this visualizes the gradient of gene expression, not ion flux. Explore freely — switch organ, color mode, and flow at will.'}
+];
+var ti=0;
+function showTour(){
+  var t=TOUR[ti];
+  document.getElementById('t-step').textContent=t.step;
+  document.getElementById('t-ttl').textContent=t.ttl;
+  document.getElementById('t-dsc').textContent=t.dsc;
+  var dots='';for(var i=0;i<TOUR.length;i++)dots+='<span class="'+(i===ti?'on':'')+'"></span>';
+  document.getElementById('t-dots').innerHTML=dots;
+  document.getElementById('t-next').textContent=(ti===TOUR.length-1)?'Finish':'Next →';
+  setView(t.tis,t.mode,t.flow,t.anim,t.zoom);
+}
+function startTour(){document.getElementById('intro-overlay').style.display='none';
+  document.getElementById('geomx-view').style.display='none';  // FIX: hide GeoMx if it was open
+  document.getElementById('tourbar').style.display='flex';
+  document.getElementById('tourbtn').style.display='none';ti=0;showTour();}
+function endTour(){document.getElementById('tourbar').style.display='none';
+  document.getElementById('tourbtn').style.display='block';}
+document.getElementById('start-tour').onclick=startTour;
+document.getElementById('reopen-tour').onclick=startTour;
+document.getElementById('skip-intro').onclick=function(){document.getElementById('intro-overlay').style.display='none';document.getElementById('tourbtn').style.display='block';};
+document.getElementById('t-next').onclick=function(){if(ti<TOUR.length-1){ti++;showTour();}else endTour();};
+document.getElementById('t-prev').onclick=function(){if(ti>0){ti--;showTour();}};
+document.getElementById('t-exit').onclick=endTour;
+
+
+resize();fitCam();setFlow();seedParts();updateText();updateLegend();render();
+</script></body></html>
